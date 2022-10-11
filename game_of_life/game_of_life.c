@@ -1,6 +1,5 @@
 #include <cassert>
 #include "graphics.h"
-#include<unistd.h>
 
 
 #define X_SIZE 600
@@ -24,7 +23,6 @@ int main() {
         win_clear();
         
         draw_area();
-        usleep(1 * 1000000);
         calc_area();
         step_area();
     }

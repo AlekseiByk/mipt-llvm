@@ -6,7 +6,7 @@ OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := game
 INCLUDE  := -Iinclude/
-SRC      := game_of_life.c
+SRC      := game_of_life.c graphics.c
 
 OBJECTS  := $(SRC:%.c=$(OBJ_DIR)/%.o)
 DEPENDENCIES \

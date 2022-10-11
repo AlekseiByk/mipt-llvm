@@ -1,0 +1,308 @@
+buff:
+        .zero   240000
+tmp:
+        .zero   240000
+main:
+        push    rbp
+        mov     rbp, rsp
+        mov     esi, 400
+        mov     edi, 600
+        call    win_init(unsigned long, unsigned long)
+        call    init_area()
+        jmp     .L2
+.L3:
+        call    win_is_closed()
+        call    win_clear()
+        call    draw_area()
+        call    calc_area()
+        call    step_area()
+.L2:
+        call    win_is_running()
+        test    eax, eax
+        setne   al
+        test    al, al
+        jne     .L3
+        mov     eax, 0
+        pop     rbp
+        ret
+init_area():
+        push    rbp
+        mov     rbp, rsp
+        push    rbx
+        sub     rsp, 24
+        mov     QWORD PTR [rbp-24], 0
+        jmp     .L6
+.L9:
+        mov     QWORD PTR [rbp-32], 0
+        jmp     .L7
+.L8:
+        mov     rax, QWORD PTR [rbp-32]
+        imul    rdx, rax, 600
+        mov     rax, QWORD PTR [rbp-24]
+        lea     rbx, [rdx+rax]
+        call    state_rand()
+        mov     BYTE PTR buff[rbx], al
+        add     QWORD PTR [rbp-32], 1
+.L7:
+        cmp     QWORD PTR [rbp-32], 399
+        jbe     .L8
+        add     QWORD PTR [rbp-24], 1
+.L6:
+        cmp     QWORD PTR [rbp-24], 599
+        jbe     .L9
+        nop
+        nop
+        mov     rbx, QWORD PTR [rbp-8]
+        leave
+        ret
+count_neighb(int, int):
+        push    rbp
+        mov     rbp, rsp
+        mov     DWORD PTR [rbp-36], edi
+        mov     DWORD PTR [rbp-40], esi
+        mov     QWORD PTR [rbp-8], 0
+        mov     eax, DWORD PTR [rbp-36]
+        sub     eax, 1
+        mov     DWORD PTR [rbp-12], eax
+        jmp     .L11
+.L18:
+        mov     eax, DWORD PTR [rbp-40]
+        sub     eax, 1
+        mov     DWORD PTR [rbp-16], eax
+        jmp     .L12
+.L17:
+        mov     eax, DWORD PTR [rbp-12]
+        cmp     eax, DWORD PTR [rbp-36]
+        jne     .L13
+        mov     eax, DWORD PTR [rbp-16]
+        cmp     eax, DWORD PTR [rbp-40]
+        je      .L20
+.L13:
+        cmp     DWORD PTR [rbp-12], 0
+        js      .L21
+        mov     eax, DWORD PTR [rbp-12]
+        cdqe
+        cmp     rax, 599
+        ja      .L21
+        cmp     DWORD PTR [rbp-16], 0
+        js      .L21
+        mov     eax, DWORD PTR [rbp-16]
+        cdqe
+        cmp     rax, 399
+        ja      .L21
+        mov     eax, DWORD PTR [rbp-12]
+        imul    edx, eax, 400
+        mov     eax, DWORD PTR [rbp-16]
+        add     eax, edx
+        cdqe
+        movzx   eax, BYTE PTR buff[rax]
+        mov     BYTE PTR [rbp-17], al
+        cmp     BYTE PTR [rbp-17], 0
+        je      .L14
+        add     QWORD PTR [rbp-8], 1
+        movzx   eax, BYTE PTR [rbp-17]
+        sal     eax, 4
+        cdqe
+        or      QWORD PTR [rbp-8], rax
+        jmp     .L14
+.L20:
+        nop
+        jmp     .L14
+.L21:
+        nop
+.L14:
+        add     DWORD PTR [rbp-16], 1
+.L12:
+        mov     eax, DWORD PTR [rbp-40]
+        add     eax, 1
+        cmp     DWORD PTR [rbp-16], eax
+        jle     .L17
+        add     DWORD PTR [rbp-12], 1
+.L11:
+        mov     eax, DWORD PTR [rbp-36]
+        add     eax, 1
+        cmp     DWORD PTR [rbp-12], eax
+        jle     .L18
+        mov     rax, QWORD PTR [rbp-8]
+        pop     rbp
+        ret
+determine_state(int, int):
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 24
+        mov     DWORD PTR [rbp-20], edi
+        mov     DWORD PTR [rbp-24], esi
+        mov     edx, DWORD PTR [rbp-24]
+        mov     eax, DWORD PTR [rbp-20]
+        mov     esi, edx
+        mov     edi, eax
+        call    count_neighb(int, int)
+        mov     QWORD PTR [rbp-8], rax
+        mov     eax, DWORD PTR [rbp-20]
+        imul    edx, eax, 400
+        mov     eax, DWORD PTR [rbp-24]
+        add     eax, edx
+        cdqe
+        movzx   eax, BYTE PTR buff[rax]
+        test    al, al
+        jne     .L23
+        mov     rax, QWORD PTR [rbp-8]
+        and     eax, 15
+        cmp     rax, 3
+        jne     .L24
+        mov     rax, QWORD PTR [rbp-8]
+        shr     rax, 4
+        and     eax, 15
+        jmp     .L25
+.L23:
+        mov     rax, QWORD PTR [rbp-8]
+        and     eax, 12
+        test    rax, rax
+        jne     .L26
+        mov     rax, QWORD PTR [rbp-8]
+        and     eax, 14
+        test    rax, rax
+        jne     .L27
+.L26:
+        mov     eax, 0
+        jmp     .L25
+.L27:
+        mov     rax, QWORD PTR [rbp-8]
+        shr     rax, 4
+        and     eax, 15
+        jmp     .L25
+.L24:
+        mov     eax, DWORD PTR [rbp-20]
+        imul    edx, eax, 400
+        mov     eax, DWORD PTR [rbp-24]
+        add     eax, edx
+        cdqe
+        movzx   eax, BYTE PTR buff[rax]
+.L25:
+        leave
+        ret
+calc_area():
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 32
+        mov     QWORD PTR [rbp-8], 0
+        jmp     .L29
+.L32:
+        mov     QWORD PTR [rbp-16], 0
+        jmp     .L30
+.L31:
+        mov     rax, QWORD PTR [rbp-16]
+        mov     edx, eax
+        mov     rax, QWORD PTR [rbp-8]
+        mov     esi, edx
+        mov     edi, eax
+        call    determine_state(int, int)
+        mov     BYTE PTR [rbp-17], al
+        mov     rdx, QWORD PTR [rbp-8]
+        mov     rax, rdx
+        sal     rax, 2
+        add     rax, rdx
+        lea     rdx, [0+rax*4]
+        add     rax, rdx
+        sal     rax, 4
+        mov     rdx, rax
+        mov     rax, QWORD PTR [rbp-16]
+        add     rdx, rax
+        movzx   eax, BYTE PTR [rbp-17]
+        mov     BYTE PTR tmp[rdx], al
+        add     QWORD PTR [rbp-16], 1
+.L30:
+        cmp     QWORD PTR [rbp-16], 399
+        jbe     .L31
+        add     QWORD PTR [rbp-8], 1
+.L29:
+        cmp     QWORD PTR [rbp-8], 599
+        jbe     .L32
+        nop
+        nop
+        leave
+        ret
+draw_area():
+        push    rbp
+        mov     rbp, rsp
+        sub     rsp, 16
+        mov     QWORD PTR [rbp-8], 0
+        jmp     .L34
+.L37:
+        mov     QWORD PTR [rbp-16], 0
+        jmp     .L35
+.L36:
+        mov     rdx, QWORD PTR [rbp-8]
+        mov     rax, rdx
+        sal     rax, 2
+        add     rax, rdx
+        lea     rdx, [0+rax*4]
+        add     rax, rdx
+        sal     rax, 4
+        mov     rdx, rax
+        mov     rax, QWORD PTR [rbp-16]
+        add     rax, rdx
+        movzx   eax, BYTE PTR buff[rax]
+        movzx   eax, al
+        mov     rdx, QWORD PTR [rbp-16]
+        mov     esi, edx
+        mov     rdx, QWORD PTR [rbp-8]
+        mov     ecx, edx
+        mov     edx, eax
+        mov     edi, ecx
+        call    win_put_pixel(int, int, unsigned char)
+        add     QWORD PTR [rbp-16], 1
+.L35:
+        cmp     QWORD PTR [rbp-16], 399
+        jbe     .L36
+        add     QWORD PTR [rbp-8], 1
+.L34:
+        cmp     QWORD PTR [rbp-8], 599
+        jbe     .L37
+        call    win_flush()
+        nop
+        leave
+        ret
+step_area():
+        push    rbp
+        mov     rbp, rsp
+        mov     QWORD PTR [rbp-8], 0
+        jmp     .L39
+.L42:
+        mov     QWORD PTR [rbp-16], 0
+        jmp     .L40
+.L41:
+        mov     rdx, QWORD PTR [rbp-8]
+        mov     rax, rdx
+        sal     rax, 2
+        add     rax, rdx
+        lea     rdx, [0+rax*4]
+        add     rax, rdx
+        sal     rax, 4
+        mov     rdx, rax
+        mov     rax, QWORD PTR [rbp-16]
+        lea     rcx, [rdx+rax]
+        mov     rdx, QWORD PTR [rbp-8]
+        mov     rax, rdx
+        sal     rax, 2
+        add     rax, rdx
+        lea     rdx, [0+rax*4]
+        add     rax, rdx
+        sal     rax, 4
+        mov     rdx, rax
+        mov     rax, QWORD PTR [rbp-16]
+        add     rdx, rax
+        movzx   eax, BYTE PTR tmp[rcx]
+        mov     BYTE PTR buff[rdx], al
+        add     QWORD PTR [rbp-16], 1
+.L40:
+        cmp     QWORD PTR [rbp-16], 399
+        jbe     .L41
+        add     QWORD PTR [rbp-8], 1
+.L39:
+        cmp     QWORD PTR [rbp-8], 599
+        jbe     .L42
+        nop
+        nop
+        pop     rbp
+        ret
