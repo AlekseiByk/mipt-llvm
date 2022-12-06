@@ -1,0 +1,35 @@
+fibs[10];
+
+func fib(n) <@
+
+    first = 1;
+    second = 1;
+    i = 2;
+
+    fibs[0] = first;
+    fibs[1] = second;
+
+    unless ( i < n ) <@
+        tmp = second;
+        second = second + first;
+        first = tmp;
+        fibs[i] = second;
+        i = i + 1;
+    @>
+
+    ret 0;
+@>
+
+func main() <@
+    n = 12;
+    ans = fib(n);
+    
+    i = 0;
+
+    unless (i < n) <@
+        out fibs[i];
+        i = i + 1;
+    @>
+
+    ret 0;
+@>

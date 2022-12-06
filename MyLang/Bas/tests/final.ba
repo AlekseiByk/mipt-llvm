@@ -1,0 +1,293 @@
+current_surf[240000];
+tmp_surf[240000];
+
+func draw() <@
+    x = 0;
+    y = 0;
+
+    unless (x < 600) <@
+        unless(y < 400) <@
+
+            surf_val = current_surf[x + 600 * y];
+            __win_put_pixel(x, y, surf_val);
+
+            y = y + 1;            
+        @>
+        y = 0;
+        x = x + 1;
+    @>
+
+    __win_flush();
+    ret 0;
+@>
+
+func init_area() <@
+    x = 0;
+    y = 0;
+
+    unless (x < 600) <@
+        unless(y < 400) <@
+
+            id = x + y * 600;
+            current_surf[id] = __win_rand();
+
+            y = y + 1;            
+        @>
+        y = 0;
+        x = x + 1;
+    @>
+
+    ret 0;
+@>
+
+func count_neighb(x, y) <@
+    ret_val = 0;
+    current_x = x - 1;
+    current_y = y - 1;
+
+    unless(current_x <= x + 1) <@
+
+        unless(current_y <= y + 1) <@
+
+            if((current_x == x) && (current_y == y)) <@
+                stop;
+            @>
+
+            if ((current_x < 0) || (current_x >= 600)) <@
+                stop;
+            @>
+
+            if ((current_y < 0) || current_y >= 400) <@
+                stop;
+            @>
+
+            if (current_surf[current_x + 600 * current_y] != 0) <@
+                ret_val = ret_val + 1;
+
+            @>
+
+            current_y = current_y + 1;
+        @>
+        current_y = y - 1;
+        current_x = current_x + 1;
+    @>
+
+    ret ret_val;
+@>
+
+func count_red(x, y) <@
+    ret_val = 0;
+    current_x = x - 1;
+    current_y = y - 1;
+
+    unless(current_x <= x + 1) <@
+
+        unless(current_y <= y + 1) <@
+
+            permission = 1;
+
+            if((current_x == x) && (current_y == y)) <@
+                permission = 0;
+            @>
+
+            if ((current_x < 0) || (current_x >= 600)) <@
+                permission = 0;
+            @>
+
+            if ((current_y < 0) || current_y >= 400) <@
+                permission = 0;
+            @>
+
+            state = 0;
+
+            if (permission == 1) <@
+                state = current_surf[current_x + 600 * current_y];
+            @>
+
+            if ((permission == 1) && ((state == 1 || state == 3) || (state == 5 || state == 7))) <@
+                ret_val = ret_val + 1;
+            @>
+
+            current_y = current_y + 1;
+        @>
+        current_y = y - 1;
+        current_x = current_x + 1;
+    @>
+
+    ret ret_val;
+@>
+
+func count_blue(x, y) <@
+    ret_val = 0;
+    current_x = x - 1;
+    current_y = y - 1;
+
+    unless(current_x <= x + 1) <@
+
+        unless(current_y <= y + 1) <@
+
+            permission = 1;
+
+            if((current_x == x) && (current_y == y)) <@
+                permission = 0;
+            @>
+
+            if ((current_x < 0) || (current_x >= 600)) <@
+                permission = 0;
+            @>
+
+            if ((current_y < 0) || current_y >= 400) <@
+                permission = 0;
+            @>
+
+            state = 0;
+
+            if (permission == 1) <@
+                state = current_surf[current_x + 600 * current_y];
+            @>
+
+            if ((permission == 1) && ((state == 4 || state == 5) || (state == 6 || state == 7))) <@
+                ret_val = ret_val + 1;
+            @>
+
+            current_y = current_y + 1;
+        @>
+        current_y = y - 1;
+        current_x = current_x + 1;
+    @>
+
+    ret ret_val;
+@>
+
+func count_green(x, y) <@
+    ret_val = 0;
+    current_x = x - 1;
+    current_y = y - 1;
+
+    unless(current_x <= x + 1) <@
+
+        unless(current_y <= y + 1) <@
+
+            permission = 1;
+
+            if((current_x == x) && (current_y == y)) <@
+                permission = 0;
+            @>
+
+            if ((current_x < 0) || (current_x >= 600)) <@
+                permission = 0;
+            @>
+
+            if ((current_y < 0) || current_y >= 400) <@
+                permission = 0;
+            @>
+
+            state = current_surf[current_x + 600 * current_y];
+
+            state = 0;
+
+            if (permission == 1) <@
+                state = current_surf[current_x + 600 * current_y];
+            @>
+
+            if ((permission == 1) && ((state == 2 || state == 3) || (state == 6 || state == 7))) <@
+                ret_val = ret_val + 1;
+            @>
+
+            current_y = current_y + 1;
+        @>
+        current_y = y - 1;
+        current_x = current_x + 1;
+    @>
+
+    ret ret_val;
+@>
+
+func determine_state(x, y) <@
+    neighb = count_neighb(x, y);
+    red = count_red(x, y);
+    green = count_green(x, y);
+    blue = count_blue(x, y);
+
+    id = x + y * 600;
+
+    color = 0;
+
+    if (red > 0) <@
+        color = color + 1;
+    @>  
+    if (green > 0) <@
+        color = color + 2;
+    @>
+    if (blue > 0) <@
+        color = color + 4;
+    @>
+
+    if (current_surf[id] == 0 && neighb == 3) <@
+        ret color;
+    @>
+
+    if (neighb > 3) <@
+        ret 0;
+    @>
+
+    if (neighb < 2) <@
+        ret 0;
+    @>
+
+    ret color;
+@>
+
+func calc() <@
+    x = 0;
+    y = 0;
+
+    unless (x < 600) <@
+        unless(y < 400) <@
+
+            new_st = determine_state(x, y);
+            tmp_surf[x + y * 600] = new_st;
+
+            y = y + 1;            
+        @>
+        y = 0;
+        x = x + 1;
+    @>
+
+    ret 0;
+@>
+
+func step() <@
+    x = 0;
+    y = 0;
+
+    unless (x < 600) <@
+        unless(y < 400) <@
+
+            id = x + y * 600;
+            current_surf[id] = tmp_surf[id];
+
+            y = y + 1;            
+        @>
+        y = 0;
+        x = x + 1;
+    @>
+
+    ret 0;
+@>
+
+func main() <@
+    width = 600;
+    height = 400;
+    __win_init_window(width, height);
+
+    init_area();
+    true = 1;
+    unless(true == 1) <@
+        draw();
+        calc();
+        step();
+    @>
+
+    ret 0;
+@>
