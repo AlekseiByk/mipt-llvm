@@ -44,26 +44,34 @@ func count_neighb(x, y) <@
     ret_val = 0;
     current_x = x - 1;
     current_y = y - 1;
+    
 
     unless(current_x <= x + 1) <@
 
         unless(current_y <= y + 1) <@
+        
+            permission = 1;
 
             if((current_x == x) && (current_y == y)) <@
-                stop;
+                permission = 0;
             @>
 
             if ((current_x < 0) || (current_x >= 600)) <@
-                stop;
+                permission = 0;
             @>
 
             if ((current_y < 0) || current_y >= 400) <@
-                stop;
+                permission = 0;
             @>
 
-            if (current_surf[current_x + 600 * current_y] != 0) <@
-                ret_val = ret_val + 1;
+            state = 0;
 
+            if (permission == 1) <@
+                state = current_surf[current_x + 600 * current_y];
+            @>
+
+            if (state != 0) <@
+                ret_val = ret_val + 1;
             @>
 
             current_y = current_y + 1;
@@ -227,15 +235,15 @@ func determine_state(x, y) <@
         ret color;
     @>
 
-    if (neighb > 3) <@
+    if ((current_surf[id] != 0) && (neighb > 3)) <@
         ret 0;
     @>
 
-    if (neighb < 2) <@
+    if ((current_surf[id] != 0) && (neighb < 2)) <@
         ret 0;
     @>
 
-    ret color;
+    ret current_surf[id];
 @>
 
 func calc() <@
